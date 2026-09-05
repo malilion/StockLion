@@ -25,7 +25,7 @@ onMounted(() => {
     <!-- Header -->
     <header class="header">
       <div class="brand">
-        <span class="logo">🦁</span>
+        <img src="/icons/icon-48.png" alt="StockLion" class="brand-logo" />
         <div class="title-group">
           <h1 class="title">StockLion</h1>
           <span class="subtitle">股力獅 v2.1</span>
@@ -162,8 +162,12 @@ onMounted(() => {
   gap: 10px;
 }
 
-.logo {
-  font-size: 24px;
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .title-group {
