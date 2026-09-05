@@ -23,7 +23,7 @@
     "@types/node": "^22.10.1",
     "@wxt-dev/module-vue": "^1.0.3",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
+    "vitest": "^2.1.9",
     "vue-tsc": "^2.1.10",
     "wxt": "^0.19.24"
   }
