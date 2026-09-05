@@ -1,0 +1,57 @@
+{
+  "ptt_stock_posts": [
+    {
+      "text": "[標的] 2330 台積電 多單進場",
+      "expectedSymbols": ["2330"]
+    },
+    {
+      "text": "推 analyst: 今天 2454 聯發科 跌破季線，外資大賣超，大盤震盪加劇。",
+      "expectedSymbols": ["2454"]
+    },
+    {
+      "text": "推 trader: 3017 奇鋐 散熱族群爆量漲停，主力買超籌碼集中！",
+      "expectedSymbols": ["3017"]
+    },
+    {
+      "text": "推 holder: 外資今天大買 2330 買超一萬張，收盤大漲 3%，台積電再創新高！",
+      "expectedSymbols": ["2330"]
+    }
+  ],
+  "threads_finance_posts": [
+    {
+      "text": "台積電下半年營收展望非常強勁，AI 晶片需求爆發，外資連續買超 5 天，值得長期持股！",
+      "expectedSymbols": ["2330"]
+    },
+    {
+      "text": "小資族存股推薦 0050 還是 00878？每月定期定額買進高股息 ETF 真的穩嗎？",
+      "expectedSymbols": ["0050", "00878"]
+    }
+  ],
+  "false_positive_cases": [
+    {
+      "text": "2024 年巴黎奧運即將在 07/26 開幕，預計有超過 10000 名運動員參加。",
+      "description": "年份 2024 不應被誤判為志聯股票",
+      "expectedSymbols": []
+    },
+    {
+      "text": "這支特價耳機售價只要 2330 元，限量特價只要 1999，訂單編號 2454。",
+      "description": "金額與訂單編號不應被誤判為台積電或聯發科",
+      "expectedSymbols": []
+    },
+    {
+      "text": "服務專線電話請撥 0912-2317-2454，客服營業時間 09:00~18:00。",
+      "description": "電話號碼與時間不應被誤判為鴻海或聯發科",
+      "expectedSymbols": []
+    },
+    {
+      "text": "今天下午去 7-11 買了統一布丁跟統一純喫茶當點心。",
+      "description": "日常生活中的統一布丁不應誤判為股票",
+      "expectedSymbols": []
+    },
+    {
+      "text": "台灣人家裡必備的大同電鍋已經用了二十年依然很好用。",
+      "description": "大同電鍋生活電器不應誤判為股票",
+      "expectedSymbols": []
+    }
+  ]
+}
