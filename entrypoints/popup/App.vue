@@ -4,6 +4,7 @@ import { useAppStore, type TabType } from '../../src/stores/app';
 import WatchlistView from '../../src/views/WatchlistView.vue';
 import StockDetailView from '../../src/views/StockDetailView.vue';
 import RadarView from '../../src/views/RadarView.vue';
+import SettingsView from '../../src/views/SettingsView.vue';
 
 const appStore = useAppStore();
 
@@ -131,12 +132,9 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- Settings Tab Placeholder -->
+      <!-- Settings Tab -->
       <section v-else-if="appStore.currentTab === 'settings'" class="tab-content">
-        <div class="empty-state">
-          <div class="empty-icon">⚙️</div>
-          <div class="empty-text">設定與 BYO Key 管理（Phase 7 實作）</div>
-        </div>
+        <SettingsView />
       </section>
     </main>
 

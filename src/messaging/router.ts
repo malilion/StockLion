@@ -11,10 +11,14 @@ import { symbolService } from '../services/symbol-service';
 import { quoteService } from '../services/quote-service';
 import { providerRegistry } from '../providers/registry';
 import { openDataProvider } from '../providers/open-data/provider';
+import { fugleProvider } from '../providers/fugle/provider';
 import { watchlistRepository } from '../storage/watchlist-repository';
+import { credentialStore } from '../storage/credential-store';
+import { maskApiKey } from '../domain/credential';
 
-// 預設註冊 OpenDataProvider
+// 預設註冊 OpenDataProvider 與 FugleProvider (需驗證 Key 解鎖)
 providerRegistry.register(openDataProvider);
+providerRegistry.register(fugleProvider);
 
 export type MessageHandler<TPayload = any, TResult = any> = (
   payload: TPayload,
@@ -93,6 +97,35 @@ export class MessageRouter {
       const quote = await quoteService.getBestQuote(payload.symbol);
       const inWatchlist = await watchlistRepository.hasSymbol(payload.symbol);
       return { quote, inWatchlist };
+    });
+
+    this.register('credential:validate', async (payload: { apiKey: string }) => {
+      const res = await fugleProvider.validate(payload.apiKey);
+      if (res.ok) {
+        await credentialStore.save('fugle', { apiKey: payload.apiKey }, 'valid');
+        providerRegistry.setCredentialValid('fugle', true);
+      } else {
+        await credentialStore.save('fugle', { apiKey: payload.apiKey }, res.status);
+        providerRegistry.setCredentialValid('fugle', false);
+      }
+      return res;
+    });
+
+    this.register('credential:get', async (payload: { providerId: string }) => {
+      const cred = await credentialStore.get(payload.providerId);
+      return {
+        hasKey: !!cred?.fields?.apiKey,
+        maskedKey: cred?.fields?.apiKey ? maskApiKey(cred.fields.apiKey) : '',
+        status: cred?.status || 'missing',
+        validatedAt: cred?.validatedAt,
+        lastErrorCode: cred?.lastErrorCode,
+      };
+    });
+
+    this.register('credential:remove', async (payload: { providerId: string }) => {
+      await credentialStore.remove(payload.providerId);
+      providerRegistry.setCredentialValid(payload.providerId, false);
+      return { ok: true };
     });
   }
 
