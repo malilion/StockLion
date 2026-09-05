@@ -29,5 +29,14 @@ export default defineConfig({
     optional_host_permissions: [
       'https://api.fugle.tw/*',
     ],
+    commands: {
+      _execute_action: {
+        suggested_key: {
+          default: 'Alt+Shift+S',
+          mac: 'Alt+Shift+S',
+        },
+        description: '快速開啟 StockLion 股力獅',
+      },
+    },
   },
 });

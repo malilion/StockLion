@@ -15,11 +15,23 @@ export default defineContentScript({
     'https://money.udn.com/*',
     'https://www.ctee.com.tw/*',
   ],
-  main() {
+  async main() {
     const currentUrl = window.location.href;
     if (!domainPolicy.isAllowed(currentUrl)) {
       console.log('🦁 StockLion: Current URL outside active whitelist, skipping Stock Peek.');
       return;
+    }
+
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get('stock_peek_enabled');
+        if (res.stock_peek_enabled === false) {
+          console.log('🦁 StockLion: Stock Peek is disabled by user settings.');
+          return;
+        }
+      } catch {
+        // quiet catch
+      }
     }
 
     console.log(`🦁 StockLion: Stock Peek active on ${window.location.hostname} (Phase 6 Production)`);

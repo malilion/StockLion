@@ -32,10 +32,20 @@ export default defineBackground(() => {
     });
   }
 
-  // 監聽通知點擊
+  // 監聽通知點擊並自動導向該個股詳情頁
   if (typeof chrome !== 'undefined' && chrome.notifications?.onClicked) {
-    chrome.notifications.onClicked.addListener((notifId) => {
+    chrome.notifications.onClicked.addListener(async (notifId) => {
       console.log('🦁 Alert notification clicked:', notifId);
+      if (notifId.startsWith('alert_')) {
+        const parts = notifId.split('_');
+        const symbol = parts[1];
+        if (symbol && chrome.storage?.local) {
+          await chrome.storage.local.set({ active_nav_symbol: symbol });
+          if (chrome.action?.openPopup) {
+            chrome.action.openPopup().catch(() => {});
+          }
+        }
+      }
     });
   }
 });
