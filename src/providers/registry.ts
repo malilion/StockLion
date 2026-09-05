@@ -4,6 +4,7 @@ import type { QuoteProvider, ProviderMeta, ProviderRegistry } from './types';
 export class DefaultProviderRegistry implements ProviderRegistry {
   private providers = new Map<string, QuoteProvider>();
   private preferredMap = new Map<Capability, string>();
+  private validCredentials = new Set<string>();
 
   register(provider: QuoteProvider): void {
     this.providers.set(provider.meta.id, provider);
@@ -16,6 +17,7 @@ export class DefaultProviderRegistry implements ProviderRegistry {
   clear(): void {
     this.providers.clear();
     this.preferredMap.clear();
+    this.validCredentials.clear();
   }
 
   setPreferred(capability: Capability, providerId: string): void {
@@ -28,6 +30,18 @@ export class DefaultProviderRegistry implements ProviderRegistry {
     } else {
       this.preferredMap.clear();
     }
+  }
+
+  setCredentialValid(credentialId: string, isValid: boolean): void {
+    if (isValid) {
+      this.validCredentials.add(credentialId);
+    } else {
+      this.validCredentials.delete(credentialId);
+    }
+  }
+
+  isCredentialValid(credentialId: string): boolean {
+    return this.validCredentials.has(credentialId);
   }
 
   list(): ProviderMeta[] {
@@ -49,14 +63,19 @@ export class DefaultProviderRegistry implements ProviderRegistry {
     const targetId = preferredId || this.preferredMap.get(capability);
     if (targetId) {
       const preferred = candidates.find((p) => p.meta.id === targetId);
-      if (preferred && !preferred.meta.credentialId) {
-        return preferred;
+      if (preferred) {
+        if (!preferred.meta.credentialId || this.validCredentials.has(preferred.meta.credentialId)) {
+          return preferred;
+        }
       }
     }
 
     for (const provider of candidates) {
-      // 若該 Provider 需要金鑰憑證，檢查憑證是否有效 (v2.1 規格：未配置或無效時不得選中)
+      // 若該 Provider 需要金鑰憑證，檢查憑證是否有效
       if (provider.meta.credentialId) {
+        if (this.validCredentials.has(provider.meta.credentialId)) {
+          return provider;
+        }
         continue;
       }
 
