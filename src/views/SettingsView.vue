@@ -190,6 +190,37 @@ function getStatusLabel(s: CredentialStatus): string {
     <div class="security-banner">
       🛡️ <strong>零外洩保證</strong>：您的金鑰僅儲存於 Chrome 本機儲存庫，絕不上傳任何第三方伺服器，網頁 Content Script 也無法存取。
     </div>
+
+    <!-- About & Disclaimer Card -->
+    <div class="card about-card">
+      <div class="about-header">
+        <span class="about-app-name">🦁 StockLion（股力獅）v2.1</span>
+        <span class="about-badge">Client-only MV3</span>
+      </div>
+
+      <div class="about-section">
+        <div class="about-title">📜 免責聲明</div>
+        <div class="about-text">
+          StockLion 提供之資訊僅供資訊整理與學習用途，不構成任何投資建議。市場資料可能存在延遲，實際交易資訊應以交易所與券商資料為準。
+        </div>
+      </div>
+
+      <div class="about-section">
+        <div class="about-title">🔒 隱私政策與無後端承諾</div>
+        <div class="about-text">
+          No backend. No account. No telemetry.<br />
+          所有 API Key、自選股、警示規則與快取完全儲存於本機儲存庫（chrome.storage.local），絕不收集券商帳密或個人財務資料。
+        </div>
+      </div>
+
+      <div class="about-section">
+        <div class="about-title">📊 資料來源與授權</div>
+        <div class="about-text">
+          • 盤後與基本面：TWSE 臺灣證券交易所 / TPEx 證券櫃檯買賣中心 Open Data<br />
+          • 盤中即時行情：富果 Fugle 行情 API（由使用者自行授權金鑰連線）
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -406,5 +437,51 @@ function getStatusLabel(s: CredentialStatus): string {
   color: #64748b;
   text-align: center;
   padding: 4px;
+}
+
+.about-card {
+  border-color: #334155;
+  background-color: #131d2e;
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.about-app-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.about-badge {
+  font-size: 9px;
+  background-color: #1e293b;
+  color: #94a3b8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #334155;
+}
+
+.about-section {
+  margin-top: 8px;
+}
+
+.about-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 2px;
+}
+
+.about-text {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #94a3b8;
 }
 </style>
