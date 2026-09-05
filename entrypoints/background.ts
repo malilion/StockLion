@@ -3,6 +3,7 @@ import { messageRouter } from '../src/messaging/router';
 import { storageRepository } from '../src/storage/repository';
 import { alertEngine } from '../src/services/alert-engine';
 import { providerRegistry } from '../src/providers/registry';
+import { credentialStore } from '../src/storage/credential-store';
 
 export default defineBackground(() => {
   console.log('🦁 StockLion Background Service Worker initialized');
@@ -10,6 +11,15 @@ export default defineBackground(() => {
   // 初始化儲存庫 Schema 版本並還原已驗證金鑰狀態 (MV3 生命週期安全)
   storageRepository.initSchemaVersion().then(async (version) => {
     console.log(`🦁 Storage schema initialized at version ${version}`);
+    // v2 遷移：將既有明文金鑰就地加密回寫（已加密者自動略過）
+    try {
+      const migrated = await credentialStore.migrateEncryptExisting();
+      if (migrated > 0) {
+        console.log(`🦁 Encrypted ${migrated} existing plaintext credential(s)`);
+      }
+    } catch (e) {
+      console.warn('🦁 Credential encryption migration skipped:', e);
+    }
     await providerRegistry.syncWithStore();
     console.log('🦁 Provider credentials restored from storage');
   });
