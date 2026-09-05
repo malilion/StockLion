@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useAppStore, type TabType } from '../../src/stores/app';
+import WatchlistView from '../../src/views/WatchlistView.vue';
 
 const appStore = useAppStore();
 
@@ -92,12 +93,9 @@ onMounted(() => {
         </div>
       </section>
 
-      <!-- Watchlist Tab Placeholder -->
+      <!-- Watchlist Tab -->
       <section v-else-if="appStore.currentTab === 'watchlist'" class="tab-content">
-        <div class="empty-state">
-          <div class="empty-icon">⭐</div>
-          <div class="empty-text">自選股清單（Phase 3 實作）</div>
-        </div>
+        <WatchlistView />
       </section>
 
       <!-- Radar Tab Placeholder -->
