@@ -15,6 +15,8 @@ import { fugleProvider } from '../providers/fugle/provider';
 import { watchlistRepository } from '../storage/watchlist-repository';
 import { credentialStore } from '../storage/credential-store';
 import { maskApiKey } from '../domain/credential';
+import { alertRepository } from '../storage/alert-repository';
+import { alertEngine } from '../services/alert-engine';
 
 // 預設註冊 OpenDataProvider 與 FugleProvider (需驗證 Key 解鎖)
 providerRegistry.register(openDataProvider);
@@ -126,6 +128,31 @@ export class MessageRouter {
       await credentialStore.remove(payload.providerId);
       providerRegistry.setCredentialValid(payload.providerId, false);
       return { ok: true };
+    });
+
+    this.register('alert:evaluate', async () => {
+      return await alertEngine.evaluateAll();
+    });
+
+    this.register('alert:list', async (payload?: { symbol?: string }) => {
+      if (payload?.symbol) {
+        return await alertRepository.getBySymbol(payload.symbol);
+      }
+      return await alertRepository.getAll();
+    });
+
+    this.register('alert:add', async (payload: any) => {
+      return await alertRepository.addRule(payload);
+    });
+
+    this.register('alert:remove', async (payload: { id: string }) => {
+      await alertRepository.removeRule(payload.id);
+      return { ok: true };
+    });
+
+    this.register('alert:toggle', async (payload: { id: string }) => {
+      const enabled = await alertRepository.toggleRule(payload.id);
+      return { enabled };
     });
   }
 

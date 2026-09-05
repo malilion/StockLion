@@ -48,7 +48,11 @@ export type AppRequest =
   | ExtensionRequest<'credential:get', { providerId: string }>
   | ExtensionRequest<'credential:remove', { providerId: string }>
   | ExtensionRequest<'provider:capabilities', Record<string, never>>
-  | ExtensionRequest<'alert:evaluate', Record<string, never>>;
+  | ExtensionRequest<'alert:evaluate', Record<string, never>>
+  | ExtensionRequest<'alert:list', { symbol?: string }>
+  | ExtensionRequest<'alert:add', any>
+  | ExtensionRequest<'alert:remove', { id: string }>
+  | ExtensionRequest<'alert:toggle', { id: string }>;
 
 export function isExtensionRequest(message: unknown): message is ExtensionRequest<string, unknown> {
   return (
