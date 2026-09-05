@@ -13,5 +13,6 @@
   { "symbol": "2024", "name": "志聯", "fullName": "志聯工業股份有限公司", "market": "TWSE" },
   { "symbol": "1216", "name": "統一", "fullName": "統一企業股份有限公司", "market": "TWSE" },
   { "symbol": "2371", "name": "大同", "fullName": "大同股份有限公司", "market": "TWSE" },
-  { "symbol": "1504", "name": "東元", "fullName": "東元電機股份有限公司", "market": "TWSE" }
+  { "symbol": "1504", "name": "東元", "fullName": "東元電機股份有限公司", "market": "TWSE" },
+  { "symbol": "006208", "name": "富邦台50", "fullName": "富邦台灣釆擷50證券投資信託基金", "market": "TWSE" }
 ]

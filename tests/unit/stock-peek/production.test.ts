@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { symbolService } from '../../../src/services/symbol-service';
 import { messageRouter } from '../../../src/messaging/router';
 import { hoverCache, HoverCache } from '../../../src/stock-peek/hover-cache';
+import { HoverCard } from '../../../src/stock-peek/hover-card';
 import { quoteBadge, type Quote } from '../../../src/domain/quote';
 import { watchlistRepository } from '../../../src/storage/watchlist-repository';
 import { providerRegistry } from '../../../src/providers/registry';
@@ -214,6 +215,67 @@ describe('Phase 6 — Stock Peek Production Suite', () => {
 
       const badge = quoteBadge(realtimeQuote);
       expect(badge).toBe('● 即時');
+    });
+
+    it('CRITICAL: HoverCard should safely escape dynamic stock names without executing innerHTML scripts', () => {
+      const createdElements: any[] = [];
+      const mockDoc = {
+        createElement: (tag: string) => {
+          const el: any = {
+            tagName: tag.toUpperCase(),
+            className: '',
+            style: {},
+            textContent: '',
+            children: [] as any[],
+            appendChild: function (c: any) { this.children.push(c); },
+            replaceChildren: function (...args: any[]) { this.children = args; },
+            addEventListener: vi.fn(),
+            attachShadow: function () {
+              this.shadowRoot = {
+                children: [] as any[],
+                appendChild: function (c: any) { this.children.push(c); },
+              };
+              return this.shadowRoot;
+            },
+            querySelector: vi.fn(),
+          };
+          createdElements.push(el);
+          return el;
+        },
+        head: { appendChild: vi.fn() },
+        body: { appendChild: vi.fn() },
+        getElementById: vi.fn(() => null),
+      };
+
+      const origDoc = (globalThis as any).document;
+      (globalThis as any).document = mockDoc;
+      (globalThis as any).requestAnimationFrame = vi.fn();
+      (globalThis as any).window = { scrollX: 0, scrollY: 0, innerWidth: 1024 };
+
+      try {
+        const hoverCard = new HoverCard();
+        const mockTarget: any = { getBoundingClientRect: () => ({ left: 100, bottom: 200 }) };
+        const maliciousName = '<img src=x onerror=alert(1)>台積電';
+
+        hoverCard.show(mockTarget, {
+          symbol: '2330',
+          name: maliciousName,
+          market: 'TWSE',
+          price: 1105,
+          change: 20,
+          changePercent: 1.84,
+          freshnessBadge: '● 即時',
+        });
+
+        const nameEl = createdElements.find((el) => el.className === 'sl-card-name');
+        expect(nameEl).toBeDefined();
+        expect(nameEl.textContent).toBe(maliciousName);
+        expect(createdElements.some((el) => el.tagName === 'IMG')).toBe(false);
+      } finally {
+        (globalThis as any).document = origDoc;
+        delete (globalThis as any).requestAnimationFrame;
+        delete (globalThis as any).window;
+      }
     });
   });
 });

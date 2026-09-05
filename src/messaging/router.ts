@@ -96,7 +96,7 @@ export class MessageRouter {
     });
 
     this.register('stockPeek:get', async (payload: { symbol: string }) => {
-      const quote = await quoteService.getBestQuote(payload.symbol);
+      const quote = await quoteService.getBestQuote(payload.symbol, { preferRealtime: true });
       const inWatchlist = await watchlistRepository.hasSymbol(payload.symbol);
       return { quote, inWatchlist };
     });
@@ -111,6 +111,11 @@ export class MessageRouter {
         providerRegistry.setCredentialValid('fugle', false);
       }
       return res;
+    });
+
+    this.register('credential:sync', async () => {
+      await providerRegistry.syncWithStore();
+      return { ok: true };
     });
 
     this.register('credential:get', async (payload: { providerId: string }) => {

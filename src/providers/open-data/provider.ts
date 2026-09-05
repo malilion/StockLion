@@ -113,6 +113,11 @@ export class OpenDataProvider implements QuoteProvider {
     await this.refreshIfNecessary(ctx?.signal);
     return this.valuationsCache.get(symbol) ?? null;
   }
+
+  async getAllQuotes(ctx?: ProviderContext): Promise<Quote[]> {
+    await this.refreshIfNecessary(ctx?.signal);
+    return Array.from(this.quotesCache.values());
+  }
 }
 
 export const openDataProvider = new OpenDataProvider();

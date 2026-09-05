@@ -2,13 +2,16 @@ import { defineBackground } from 'wxt/sandbox';
 import { messageRouter } from '../src/messaging/router';
 import { storageRepository } from '../src/storage/repository';
 import { alertEngine } from '../src/services/alert-engine';
+import { providerRegistry } from '../src/providers/registry';
 
 export default defineBackground(() => {
   console.log('🦁 StockLion Background Service Worker initialized');
 
-  // 初始化儲存庫 Schema 版本
-  storageRepository.initSchemaVersion().then((version) => {
+  // 初始化儲存庫 Schema 版本並還原已驗證金鑰狀態 (MV3 生命週期安全)
+  storageRepository.initSchemaVersion().then(async (version) => {
     console.log(`🦁 Storage schema initialized at version ${version}`);
+    await providerRegistry.syncWithStore();
+    console.log('🦁 Provider credentials restored from storage');
   });
 
   // 掛載訊息路由器監聽器
@@ -21,9 +24,10 @@ export default defineBackground(() => {
       delayInMinutes: 1,
     });
 
-    chrome.alarms.onAlarm.addListener((alarm) => {
+    chrome.alarms.onAlarm.addListener(async (alarm) => {
       if (alarm.name === 'stocklion:alert-poll') {
-        alertEngine.evaluateAll();
+        await providerRegistry.syncWithStore();
+        await alertEngine.evaluateAll({ isBackgroundPoll: true });
       }
     });
   }

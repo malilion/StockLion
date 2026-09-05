@@ -14,6 +14,7 @@ export interface HoverQuoteData {
 }
 
 export class HoverCard {
+  private host: HTMLDivElement | null = null;
   private container: HTMLDivElement | null = null;
   private hideTimeout: any = null;
   private currentTarget: HTMLElement | null = null;
@@ -27,6 +28,7 @@ export class HoverCard {
     if (typeof document === 'undefined') return;
     if (document.getElementById('stocklion-peek-styles')) return;
 
+    // 僅注入頁面中 Target Span 的標記樣式
     const style = document.createElement('style');
     style.id = 'stocklion-peek-styles';
     style.textContent = `
@@ -41,9 +43,14 @@ export class HoverCard {
       .stocklion-target:hover {
         background-color: rgba(245, 158, 11, 0.15);
       }
+    `;
+    document.head.appendChild(style);
+  }
+
+  private getCardStyleContent(): string {
+    return `
       .stocklion-card-popover {
-        position: absolute;
-        z-index: 2147483647;
+        position: relative;
         width: 240px;
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -58,6 +65,10 @@ export class HoverCard {
         opacity: 0;
         transform: translateY(4px);
         transition: opacity 0.15s ease, transform 0.15s ease;
+        box-sizing: border-box;
+      }
+      .stocklion-card-popover * {
+        box-sizing: border-box;
       }
       .stocklion-card-popover.visible {
         opacity: 1;
@@ -144,7 +155,6 @@ export class HoverCard {
         font-weight: 600;
       }
     `;
-    document.head.appendChild(style);
   }
 
   show(target: HTMLElement, data: HoverQuoteData) {
@@ -154,11 +164,31 @@ export class HoverCard {
     this.currentData = data;
 
     if (!this.container) {
+      this.host = document.createElement('div');
+      this.host.className = 'stocklion-card-host';
+      this.host.style.position = 'absolute';
+      this.host.style.zIndex = '2147483647';
+      this.host.style.pointerEvents = 'none';
+
+      const shadow = this.host.attachShadow ? this.host.attachShadow({ mode: 'open' }) : null;
+
+      const style = document.createElement('style');
+      style.textContent = this.getCardStyleContent();
+
       this.container = document.createElement('div');
       this.container.className = 'stocklion-card-popover';
       this.container.addEventListener('mouseenter', () => this.clearHideTimeout());
       this.container.addEventListener('mouseleave', () => this.hide());
-      document.body.appendChild(this.container);
+
+      if (shadow) {
+        shadow.appendChild(style);
+        shadow.appendChild(this.container);
+      } else {
+        this.host.appendChild(style);
+        this.host.appendChild(this.container);
+      }
+
+      document.body.appendChild(this.host);
     }
 
     const isUp = (data.change ?? 0) > 0;
@@ -170,29 +200,75 @@ export class HoverCard {
     const watchlistText = data.inWatchlist ? '★ 已在自選' : '⭐ 加入自選';
     const watchlistBtnClass = data.inWatchlist ? 'sl-card-btn in-watchlist' : 'sl-card-btn';
 
-    this.container.innerHTML = `
-      <div class="sl-card-header">
-        <div>
-          <span class="sl-card-name">${data.name}</span>
-          <span class="sl-card-symbol">${data.symbol}</span>
-        </div>
-        <span class="sl-card-badge ${badgeClass}">${data.freshnessBadge}</span>
-      </div>
-      <div class="sl-card-price-row">
-        <span class="sl-card-price">${data.price != null ? `$${data.price}` : '--'}</span>
-        <span class="sl-card-change ${changeClass}">
-          ${data.change != null ? `${sign}${data.change} (${sign}${data.changePercent}%)` : '--'}
-        </span>
-      </div>
-      <div class="sl-card-footer">
-        <button class="${watchlistBtnClass}" id="sl-btn-watchlist">${watchlistText}</button>
-        <button class="sl-card-btn" id="sl-btn-detail">→ 詳細資訊</button>
-      </div>
-    `;
+    // 嚴格使用 DOM 節點建立與 textContent，杜絕 XSS 注入
+    const header = document.createElement('div');
+    header.className = 'sl-card-header';
+
+    const titleGroup = document.createElement('div');
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'sl-card-name';
+    nameSpan.textContent = data.name;
+
+    const symbolSpan = document.createElement('span');
+    symbolSpan.className = 'sl-card-symbol';
+    symbolSpan.textContent = data.symbol;
+
+    titleGroup.appendChild(nameSpan);
+    titleGroup.appendChild(symbolSpan);
+
+    const badge = document.createElement('span');
+    badge.className = `sl-card-badge ${badgeClass}`;
+    badge.textContent = data.freshnessBadge;
+
+    header.appendChild(titleGroup);
+    header.appendChild(badge);
+
+    const priceRow = document.createElement('div');
+    priceRow.className = 'sl-card-price-row';
+
+    const priceSpan = document.createElement('span');
+    priceSpan.className = 'sl-card-price';
+    priceSpan.textContent = data.price != null ? `$${data.price}` : '--';
+
+    const changeSpan = document.createElement('span');
+    changeSpan.className = `sl-card-change ${changeClass}`.trim();
+    changeSpan.textContent =
+      data.change != null
+        ? `${sign}${data.change} (${sign}${data.changePercent}%)`
+        : '--';
+
+    priceRow.appendChild(priceSpan);
+    priceRow.appendChild(changeSpan);
+
+    const footer = document.createElement('div');
+    footer.className = 'sl-card-footer';
+
+    const watchlistBtn = document.createElement('button');
+    watchlistBtn.className = watchlistBtnClass;
+    watchlistBtn.id = 'sl-btn-watchlist';
+    watchlistBtn.textContent = watchlistText;
+
+    const detailBtn = document.createElement('button');
+    detailBtn.className = 'sl-card-btn';
+    detailBtn.id = 'sl-btn-detail';
+    detailBtn.textContent = '→ 詳細資訊';
+
+    footer.appendChild(watchlistBtn);
+    footer.appendChild(detailBtn);
+
+    if (typeof this.container.replaceChildren === 'function') {
+      this.container.replaceChildren(header, priceRow, footer);
+    } else {
+      while (this.container.firstChild) {
+        this.container.removeChild(this.container.firstChild);
+      }
+      this.container.appendChild(header);
+      this.container.appendChild(priceRow);
+      this.container.appendChild(footer);
+    }
 
     // 綁定按鈕事件
-    const watchlistBtn = this.container.querySelector('#sl-btn-watchlist') as HTMLButtonElement | null;
-    if (watchlistBtn && data.onToggleWatchlist) {
+    if (data.onToggleWatchlist) {
       watchlistBtn.onclick = async (e) => {
         e.stopPropagation();
         watchlistBtn.disabled = true;
@@ -200,19 +276,14 @@ export class HoverCard {
           const nowInWatchlist = await data.onToggleWatchlist!(data.symbol);
           data.inWatchlist = nowInWatchlist;
           watchlistBtn.textContent = nowInWatchlist ? '★ 已在自選' : '⭐ 加入自選';
-          if (nowInWatchlist) {
-            watchlistBtn.className = 'sl-card-btn in-watchlist';
-          } else {
-            watchlistBtn.className = 'sl-card-btn';
-          }
+          watchlistBtn.className = nowInWatchlist ? 'sl-card-btn in-watchlist' : 'sl-card-btn';
         } finally {
           watchlistBtn.disabled = false;
         }
       };
     }
 
-    const detailBtn = this.container.querySelector('#sl-btn-detail') as HTMLButtonElement | null;
-    if (detailBtn && data.onOpenDetail) {
+    if (data.onOpenDetail) {
       detailBtn.onclick = (e) => {
         e.stopPropagation();
         data.onOpenDetail!(data.symbol);
@@ -221,19 +292,23 @@ export class HoverCard {
 
     // 計算定位
     const rect = target.getBoundingClientRect();
-    const scrollX = window.scrollX || document.documentElement.scrollLeft;
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const scrollX = (typeof window !== 'undefined' ? window.scrollX : 0) || document.documentElement?.scrollLeft || 0;
+    const scrollY = (typeof window !== 'undefined' ? window.scrollY : 0) || document.documentElement?.scrollTop || 0;
+    const winWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
 
     let left = rect.left + scrollX;
     let top = rect.bottom + scrollY + 6;
 
     // 防止右側溢出
-    if (left + 250 > window.innerWidth + scrollX) {
-      left = window.innerWidth + scrollX - 255;
+    if (left + 250 > winWidth + scrollX) {
+      left = winWidth + scrollX - 255;
     }
 
-    this.container.style.left = `${Math.max(8, left)}px`;
-    this.container.style.top = `${top}px`;
+    const safeLeft = Math.max(8, left);
+    if (this.host) {
+      this.host.style.left = `${safeLeft}px`;
+      this.host.style.top = `${top}px`;
+    }
 
     // 觸發顯示動畫
     requestAnimationFrame(() => {
@@ -261,9 +336,12 @@ export class HoverCard {
 
   destroy() {
     this.clearHideTimeout();
-    if (this.container && this.container.parentNode) {
+    if (this.host && this.host.parentNode) {
+      this.host.parentNode.removeChild(this.host);
+    } else if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
     }
+    this.host = null;
     this.container = null;
     this.currentData = null;
   }

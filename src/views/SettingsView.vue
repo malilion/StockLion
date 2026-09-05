@@ -45,18 +45,33 @@ async function handleValidateAndSave() {
   feedbackType.value = 'info';
 
   try {
+    // 1. 動態請求 optional host permissions (符合 Chrome Web Store 規範)
+    if (typeof chrome !== 'undefined' && chrome.permissions?.request) {
+      const granted = await chrome.permissions.request({
+        origins: ['https://api.fugle.tw/*'],
+      });
+      if (!granted) {
+        status.value = 'missing';
+        feedbackType.value = 'error';
+        feedbackMessage.value = '您未授予連線至 api.fugle.tw 的權限，無法驗證金鑰';
+        return;
+      }
+    }
+
     const result = await fugleProvider.validate(key);
     status.value = result.status;
 
     if (result.ok) {
       await credentialStore.save('fugle', { apiKey: key }, 'valid');
       providerRegistry.setCredentialValid('fugle', true);
+      notifyBackgroundCredentialSync();
       validatedAt.value = new Date().toISOString();
       feedbackType.value = 'success';
       feedbackMessage.value = '✅ 驗證成功！已解鎖盤中即時行情（● 即時）。';
     } else {
       await credentialStore.save('fugle', { apiKey: key }, result.status);
       providerRegistry.setCredentialValid('fugle', false);
+      notifyBackgroundCredentialSync();
       feedbackType.value = 'error';
       feedbackMessage.value = `❌ ${result.errorMessage || '金鑰驗證失敗'}`;
     }
@@ -72,11 +87,42 @@ async function handleValidateAndSave() {
 async function handleClear() {
   await credentialStore.remove('fugle');
   providerRegistry.setCredentialValid('fugle', false);
+  notifyBackgroundCredentialSync();
+
+  // 釋放 optional host permissions
+  if (typeof chrome !== 'undefined' && chrome.permissions?.remove) {
+    try {
+      await chrome.permissions.remove({
+        origins: ['https://api.fugle.tw/*'],
+      });
+    } catch {
+      // quiet catch
+    }
+  }
+
   apiKeyInput.value = '';
   status.value = 'missing';
   validatedAt.value = undefined;
   feedbackType.value = 'info';
   feedbackMessage.value = '已清除金鑰，系統回退至免金鑰模式（○ 收盤盤後資料）。';
+}
+
+function notifyBackgroundCredentialSync() {
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    try {
+      chrome.runtime.sendMessage({
+        id: `sync_cred_${Date.now()}`,
+        type: 'credential:sync',
+        payload: {},
+      }, () => {
+        if (chrome.runtime.lastError) {
+          // background might be sleeping or unavailable in test
+        }
+      });
+    } catch {
+      // quiet catch
+    }
+  }
 }
 
 function getStatusBadgeClass(s: CredentialStatus): string {

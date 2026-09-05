@@ -1,0 +1,21 @@
+{
+  "tradingDate": "2026-09-04",
+  "rankings": [
+    { "symbol": "3017", "name": "奇鋐", "market": "TWSE", "price": 680, "change": 61, "changePercent": 9.85, "volume": 52140, "volumeRatio": 245 },
+    { "symbol": "2382", "name": "廣達", "market": "TWSE", "price": 285, "change": 18.5, "changePercent": 6.94, "volume": 78200, "volumeRatio": 198 },
+    { "symbol": "3231", "name": "緯創", "market": "TWSE", "price": 118, "change": 6.5, "changePercent": 5.83, "volume": 95400, "volumeRatio": 187 },
+    { "symbol": "2330", "name": "台積電", "market": "TWSE", "price": 1105, "change": 20, "changePercent": 1.84, "volume": 35620, "volumeRatio": 112 },
+    { "symbol": "2454", "name": "聯發科", "market": "TWSE", "price": 1420, "change": 30, "changePercent": 2.16, "volume": 8450, "volumeRatio": 105 },
+    { "symbol": "0050", "name": "元大台灣50", "market": "TWSE", "price": 189.5, "change": 1.5, "changePercent": 0.8, "volume": 28900, "volumeRatio": 95 },
+    { "symbol": "2317", "name": "鴻海", "market": "TWSE", "price": 202, "change": -3.5, "changePercent": -1.7, "volume": 62400, "volumeRatio": 88 },
+    { "symbol": "2603", "name": "長榮", "market": "TWSE", "price": 185, "change": -8.5, "changePercent": -4.39, "volume": 41200, "volumeRatio": 75 },
+    { "symbol": "2609", "name": "陽明", "market": "TWSE", "price": 64.2, "change": -4.8, "changePercent": -6.96, "volume": 58900, "volumeRatio": 120 }
+  ],
+  "attention": [
+    { "symbol": "3017", "name": "奇鋐", "market": "TWSE", "price": 680, "change": 61, "changePercent": 9.85, "volume": 52140, "reason": "近六日累積週轉率逾 50%" },
+    { "symbol": "2382", "name": "廣達", "market": "TWSE", "price": 285, "change": 18.5, "changePercent": 6.94, "volume": 78200, "reason": "近六個營業日之累積週轉率達到標準" }
+  ],
+  "disposition": [
+    { "symbol": "3231", "name": "緯創", "market": "TWSE", "price": 118, "change": 6.5, "changePercent": 5.83, "volume": 95400, "period": "09/01 ~ 09/14", "reason": "連續三次列入注意有價證券，採五分鐘撮合" }
+  ]
+}

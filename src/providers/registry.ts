@@ -1,5 +1,6 @@
 import type { Capability } from '../domain/capability';
 import type { QuoteProvider, ProviderMeta, ProviderRegistry } from './types';
+import { credentialStore, type CredentialStore } from '../storage/credential-store';
 
 export class DefaultProviderRegistry implements ProviderRegistry {
   private providers = new Map<string, QuoteProvider>();
@@ -42,6 +43,17 @@ export class DefaultProviderRegistry implements ProviderRegistry {
 
   isCredentialValid(credentialId: string): boolean {
     return this.validCredentials.has(credentialId);
+  }
+
+  async syncWithStore(store?: CredentialStore): Promise<void> {
+    const targetStore = store ?? credentialStore;
+    const all = await targetStore.getAll();
+    this.validCredentials.clear();
+    for (const [providerId, cred] of Object.entries(all)) {
+      if (cred?.status === 'valid') {
+        this.validCredentials.add(providerId);
+      }
+    }
   }
 
   list(): ProviderMeta[] {

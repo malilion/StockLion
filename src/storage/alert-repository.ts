@@ -56,6 +56,32 @@ export class AlertRepository {
     return rule;
   }
 
+  async updateRulesBatch(
+    updatesMap: Map<string, Partial<AlertRule>> | Record<string, Partial<AlertRule>>
+  ): Promise<void> {
+    const all = await this.getAll();
+    let changed = false;
+    const isMap = updatesMap instanceof Map;
+
+    for (const rule of all) {
+      const update = isMap
+        ? (updatesMap as Map<string, Partial<AlertRule>>).get(rule.id)
+        : (updatesMap as Record<string, Partial<AlertRule>>)[rule.id];
+      if (update) {
+        Object.assign(rule, update);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await this.repo.set(STORAGE_KEYS.alerts, all);
+    }
+  }
+
+  async saveAll(rules: AlertRule[]): Promise<void> {
+    await this.repo.set(STORAGE_KEYS.alerts, rules);
+  }
+
   async removeRule(id: string): Promise<void> {
     const all = await this.getAll();
     const filtered = all.filter((r) => r.id !== id);
