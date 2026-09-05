@@ -10,6 +10,9 @@ import QuoteBadge from '../components/QuoteBadge.vue';
 import StockChart from '../components/StockChart.vue';
 import FundamentalGrid from '../components/FundamentalGrid.vue';
 import MarketStatusBadge from '../components/MarketStatusBadge.vue';
+import AlertModal from '../components/AlertModal.vue';
+
+const isAlertModalOpen = ref(false);
 
 const props = defineProps<{
   symbol: string;
@@ -115,14 +118,23 @@ const sign = computed(() => (isUp.value ? '+' : ''));
         <span class="market-pill">{{ stockInfo.market }}</span>
       </div>
 
-      <button
-        class="star-btn"
-        :class="{ active: isWatchlisted }"
-        :title="isWatchlisted ? '自選股中 (點擊移除)' : '加入自選股'"
-        @click="toggleWatchlist"
-      >
-        {{ isWatchlisted ? '⭐ 已自選' : '☆ 加入' }}
-      </button>
+      <div class="header-actions">
+        <button
+          class="alert-btn"
+          title="設定到價提醒"
+          @click="isAlertModalOpen = true"
+        >
+          🔔
+        </button>
+        <button
+          class="star-btn"
+          :class="{ active: isWatchlisted }"
+          :title="isWatchlisted ? '自選股中 (點擊移除)' : '加入自選股'"
+          @click="toggleWatchlist"
+        >
+          {{ isWatchlisted ? '⭐ 已自選' : '☆ 加入' }}
+        </button>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -188,6 +200,15 @@ const sign = computed(() => (isUp.value ? '+' : ''));
     <div class="footer-note">
       資料來源：臺灣證券交易所 (Open Data) • 收盤盤後更新
     </div>
+
+    <!-- Alert Modal -->
+    <AlertModal
+      :is-open="isAlertModalOpen"
+      :symbol="symbol"
+      :name="stockInfo.name"
+      :current-price="quote?.price"
+      @close="isAlertModalOpen = false"
+    />
   </div>
 </template>
 
@@ -206,6 +227,28 @@ const sign = computed(() => (isUp.value ? '+' : ''));
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid #1e293b;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alert-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #fbbf24;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.alert-btn:hover {
+  background: #1e293b;
+  border-color: #f59e0b;
 }
 
 .back-btn {
