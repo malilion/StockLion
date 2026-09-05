@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { useAppStore, type TabType } from '../../src/stores/app';
 import WatchlistView from '../../src/views/WatchlistView.vue';
+import StockDetailView from '../../src/views/StockDetailView.vue';
 
 const appStore = useAppStore();
 
@@ -66,8 +67,15 @@ onMounted(() => {
 
     <!-- Main Content Area -->
     <main class="content-area">
+      <!-- Stock Detail View Overlay -->
+      <StockDetailView
+        v-if="appStore.selectedSymbol"
+        :symbol="appStore.selectedSymbol"
+        @back="appStore.closeStockDetail"
+      />
+
       <!-- Market Tab -->
-      <section v-if="appStore.currentTab === 'market'" class="tab-content">
+      <section v-else-if="appStore.currentTab === 'market'" class="tab-content">
         <div class="card index-card">
           <div class="card-header">
             <span class="card-title">加權指數 (TWSE)</span>
