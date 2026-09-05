@@ -60,10 +60,13 @@ const candleElements = computed(() => {
   if (list.length === 0) return [];
 
   const priceRange = maxPrice.value - minPrice.value || 1;
-  const candleWidth = Math.max(3, (svgWidth - 20) / list.length - 2);
+  const availableWidth = svgWidth - 20;
+  const slotWidth = availableWidth / list.length;
+  const candleWidth = Math.max(3, Math.min(slotWidth - 2, 16));
 
   return list.map((candle, idx) => {
-    const x = 10 + idx * ((svgWidth - 20) / list.length) + candleWidth / 2;
+    const rectX = 10 + idx * slotWidth + (slotWidth - candleWidth) / 2;
+    const wickX = rectX + candleWidth / 2;
 
     const openY = chartTop + chartHeight - ((candle.open - minPrice.value) / priceRange) * chartHeight;
     const closeY = chartTop + chartHeight - ((candle.close - minPrice.value) / priceRange) * chartHeight;
@@ -79,11 +82,11 @@ const candleElements = computed(() => {
     const volY = volumeTop + volumeHeight - volHeight;
 
     return {
-      x,
-      wickX: x + candleWidth / 2,
+      x: rectX,
+      wickX,
       highY,
       lowY,
-      rectX: x,
+      rectX,
       rectY,
       width: candleWidth,
       height: rectHeight,

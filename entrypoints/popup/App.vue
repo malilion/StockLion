@@ -4,6 +4,7 @@ import { useAppStore, type TabType } from '../../src/stores/app';
 import WatchlistView from '../../src/views/WatchlistView.vue';
 import StockDetailView from '../../src/views/StockDetailView.vue';
 import RadarView from '../../src/views/RadarView.vue';
+import SearchView from '../../src/views/SearchView.vue';
 import SettingsView from '../../src/views/SettingsView.vue';
 
 const appStore = useAppStore();
@@ -89,28 +90,72 @@ onMounted(async () => {
 
       <!-- Market Tab -->
       <section v-else-if="appStore.currentTab === 'market'" class="tab-content">
-        <div class="card index-card">
-          <div class="card-header">
-            <span class="card-title">加權指數 (TWSE)</span>
-            <span class="badge badge-eod">○ 盤後收盤</span>
+        <div class="indices-grid">
+          <div class="card index-card">
+            <div class="card-header">
+              <span class="card-title">加權指數 (TWSE)</span>
+              <span class="badge badge-eod">○ 盤後收盤</span>
+            </div>
+            <div class="card-body">
+              <div class="price-val">24,568.12</div>
+              <div class="change-val positive">+320.15 (+1.32%)</div>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="price-val">24,568.12</div>
-            <div class="change-val positive">+320.15 (+1.32%)</div>
+
+          <div class="card index-card">
+            <div class="card-header">
+              <span class="card-title">櫃買指數 (TPEx)</span>
+              <span class="badge badge-eod">○ 盤後收盤</span>
+            </div>
+            <div class="card-body">
+              <div class="price-val">268.45</div>
+              <div class="change-val positive">+1.82 (+0.68%)</div>
+            </div>
           </div>
         </div>
 
-        <div class="phase-notice">
-          <div class="notice-title">🦁 Phase 1 Skeleton 運作中</div>
-          <p class="notice-desc">
-            背景 Service Worker 訊息協議、版本化 Storage、Pinia 狀態與錯誤模型已就緒。
-          </p>
-          <button class="ping-btn" @click="appStore.checkConnection()">
-            測試 Background Round-Trip
-          </button>
-          <div v-if="appStore.lastError" class="error-msg">
-            {{ appStore.lastError }}
+        <!-- Quick Shortcuts -->
+        <div class="section-heading">快速功能</div>
+        <div class="shortcuts-grid">
+          <div class="shortcut-card" @click="appStore.setTab('watchlist')">
+            <span class="shortcut-icon">⭐</span>
+            <div class="shortcut-info">
+              <div class="shortcut-title">自選追蹤</div>
+              <div class="shortcut-desc">管理群組與即時/盤後報價</div>
+            </div>
           </div>
+
+          <div class="shortcut-card" @click="appStore.setTab('radar')">
+            <span class="shortcut-icon">🔥</span>
+            <div class="shortcut-info">
+              <div class="shortcut-title">今日雷達</div>
+              <div class="shortcut-desc">爆量、漲跌排行、注意處置股</div>
+            </div>
+          </div>
+
+          <div class="shortcut-card" @click="appStore.setTab('search')">
+            <span class="shortcut-icon">🔍</span>
+            <div class="shortcut-info">
+              <div class="shortcut-title">離線搜尋</div>
+              <div class="shortcut-desc">內建上市櫃代碼字典搜尋</div>
+            </div>
+          </div>
+
+          <div class="shortcut-card" @click="appStore.setTab('settings')">
+            <span class="shortcut-icon">⚙️</span>
+            <div class="shortcut-info">
+              <div class="shortcut-title">系統與 Key</div>
+              <div class="shortcut-desc">設定行情 Key、警報與懸浮</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Market Info Banner -->
+        <div class="market-info-card">
+          <div class="info-title">💡 報價規範與來源說明</div>
+          <p class="info-text">
+            StockLion 嚴格遵循 BYO Key 隱私規範。未設定 Key 時，一律透過證交所 / 櫃買中心公開數據提供盤後收盤資料；欲啟用盤中即時報價與價格警報，請至設定輸入 Fugle API Key。
+          </p>
         </div>
       </section>
 
@@ -124,12 +169,9 @@ onMounted(async () => {
         <RadarView />
       </section>
 
-      <!-- Search Tab Placeholder -->
+      <!-- Search Tab -->
       <section v-else-if="appStore.currentTab === 'search'" class="tab-content">
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-text">股票離線搜尋（Phase 2 實作）</div>
-        </div>
+        <SearchView />
       </section>
 
       <!-- Settings Tab -->
@@ -320,66 +362,88 @@ onMounted(async () => {
   color: #10b981; /* 台股綠跌 */
 }
 
-.phase-notice {
-  background-color: #1e293b;
-  border: 1px dashed #475569;
-  border-radius: 8px;
-  padding: 12px;
-  text-align: center;
+.indices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
-.notice-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #fbbf24;
-  margin-bottom: 6px;
+.indices-grid .card {
+  margin-bottom: 0;
 }
 
-.notice-desc {
-  font-size: 11px;
-  color: #94a3b8;
-  margin: 0 0 10px 0;
-  line-height: 1.4;
-}
-
-.ping-btn {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  color: #0b0f19;
-  font-weight: 600;
+.section-heading {
   font-size: 12px;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.ping-btn:hover {
-  opacity: 0.9;
-}
-
-.error-msg {
-  margin-top: 8px;
-  font-size: 11px;
-  color: #f87171;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 16px;
-  color: #64748b;
-}
-
-.empty-icon {
-  font-size: 32px;
+  font-weight: 600;
+  color: #94a3b8;
   margin-bottom: 8px;
 }
 
-.empty-text {
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shortcut-card:hover {
+  background-color: #273549;
+  border-color: #fbbf24;
+}
+
+.shortcut-icon {
+  font-size: 20px;
+}
+
+.shortcut-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.shortcut-title {
   font-size: 12px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.shortcut-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.market-info-card {
+  background-color: rgba(30, 41, 59, 0.4);
+  border: 1px dashed #334155;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.info-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 4px;
+}
+
+.info-text {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .footer {

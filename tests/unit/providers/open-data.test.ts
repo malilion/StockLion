@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  parseNumeric,
   normalizeTwseQuote,
   normalizeTpexQuote,
   normalizeTwseValuation,
@@ -113,5 +114,23 @@ describe('OpenData Provider & Normalizers', () => {
     expect(valuation.dividendYield).toBe(1.45);
     expect(valuation.pb).toBe(6.8);
     expect(valuation.freshness).toBe('eod');
+  });
+
+  it('should parse various numeric formats correctly with parseNumeric', () => {
+    expect(parseNumeric('1105.00')).toBe(1105);
+    expect(parseNumeric('1,105.00')).toBe(1105);
+    expect(parseNumeric('+20.00')).toBe(20);
+    expect(parseNumeric('-3.00')).toBe(-3);
+    expect(parseNumeric('- 1.50')).toBe(-1.5);
+    expect(parseNumeric('▼ 2.50')).toBe(-2.5);
+    expect(parseNumeric('▲ 3.00')).toBe(3);
+    expect(parseNumeric('－5.00')).toBe(-5);
+    expect(parseNumeric('0.00')).toBe(0);
+    expect(parseNumeric('--')).toBeNull();
+    expect(parseNumeric('N/A')).toBeNull();
+    expect(parseNumeric('除息')).toBeNull();
+    expect(parseNumeric(null)).toBeNull();
+    expect(parseNumeric(undefined)).toBeNull();
+    expect(parseNumeric('')).toBeNull();
   });
 });
