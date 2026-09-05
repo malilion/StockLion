@@ -1,0 +1,17 @@
+[
+  { "symbol": "2330", "name": "台積電", "fullName": "台灣積體電路製造股份有限公司", "market": "TWSE" },
+  { "symbol": "2317", "name": "鴻海", "fullName": "鴻海精密工業股份有限公司", "market": "TWSE" },
+  { "symbol": "2454", "name": "聯發科", "fullName": "聯發科技股份有限公司", "market": "TWSE" },
+  { "symbol": "0050", "name": "元大台灣50", "fullName": "元大台灣卓越50證券投資信託基金", "market": "TWSE" },
+  { "symbol": "0056", "name": "元大高股息", "fullName": "元大台灣高股息證券投資信託基金", "market": "TWSE" },
+  { "symbol": "00878", "name": "國泰永續高股息", "fullName": "國泰台灣ESG永續高股息ETF證券投資信託基金", "market": "TWSE" },
+  { "symbol": "3017", "name": "奇鋐", "fullName": "奇鋐科技股份有限公司", "market": "TWSE" },
+  { "symbol": "2382", "name": "廣達", "fullName": "廣達電腦股份有限公司", "market": "TWSE" },
+  { "symbol": "3231", "name": "緯創", "fullName": "緯創資通股份有限公司", "market": "TWSE" },
+  { "symbol": "2603", "name": "長榮", "fullName": "長榮海運股份有限公司", "market": "TWSE" },
+  { "symbol": "2609", "name": "陽明", "fullName": "陽明海運股份有限公司", "market": "TWSE" },
+  { "symbol": "2024", "name": "志聯", "fullName": "志聯工業股份有限公司", "market": "TWSE" },
+  { "symbol": "1216", "name": "統一", "fullName": "統一企業股份有限公司", "market": "TWSE" },
+  { "symbol": "2371", "name": "大同", "fullName": "大同股份有限公司", "market": "TWSE" },
+  { "symbol": "1504", "name": "東元", "fullName": "東元電機股份有限公司", "market": "TWSE" }
+]
