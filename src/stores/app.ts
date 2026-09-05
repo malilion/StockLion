@@ -7,12 +7,22 @@ export type TabType = 'market' | 'watchlist' | 'radar' | 'search' | 'settings';
 
 export const useAppStore = defineStore('app', () => {
   const currentTab = ref<TabType>('market');
+  const selectedSymbol = ref<string | null>(null);
   const isBackgroundConnected = ref<boolean | null>(null);
   const latency = ref<number | null>(null);
   const lastError = ref<string | null>(null);
 
   function setTab(tab: TabType) {
     currentTab.value = tab;
+    selectedSymbol.value = null; // 切換分頁時退出詳細頁
+  }
+
+  function viewStockDetail(symbol: string) {
+    selectedSymbol.value = symbol;
+  }
+
+  function closeStockDetail() {
+    selectedSymbol.value = null;
   }
 
   async function checkConnection() {
@@ -34,10 +44,13 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     currentTab,
+    selectedSymbol,
     isBackgroundConnected,
     latency,
     lastError,
     setTab,
+    viewStockDetail,
+    closeStockDetail,
     checkConnection,
   };
 });

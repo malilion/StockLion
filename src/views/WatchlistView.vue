@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useWatchlistStore } from '../stores/watchlist';
+import { useAppStore } from '../stores/app';
 import { symbolService } from '../services/symbol-service';
 import type { StockSymbol } from '../domain/stock';
 import StockCard from '../components/StockCard.vue';
 
 const watchlistStore = useWatchlistStore();
+const appStore = useAppStore();
 
 const searchQuery = ref('');
 const searchResults = ref<StockSymbol[]>([]);
@@ -136,6 +138,7 @@ async function handleCreateGroup() {
         :key="symbol"
         :symbol="symbol"
         :quote="watchlistStore.quotes[symbol]"
+        @select="appStore.viewStockDetail(symbol)"
         @remove="watchlistStore.removeSymbol"
       />
     </div>
