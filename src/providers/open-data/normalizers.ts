@@ -6,13 +6,23 @@ export function parseNumeric(val: unknown): number | null {
   if (val === null || val === undefined || val === '') return null;
   if (typeof val === 'number') return isNaN(val) ? null : val;
 
-  const str = String(val).trim().replace(/,/g, '');
+  let str = String(val).trim().replace(/,/g, '');
   if (str === '--' || str === 'N/A' || str === '除息' || str === '除權') return null;
 
-  // 處理特殊符號如 "+20.0" 或 "-5.0"
-  const cleanStr = str.replace(/^[+]/, '');
-  const num = parseFloat(cleanStr);
-  return isNaN(num) ? null : num;
+  // 處理特殊符號如 "+20.0"、"- 5.0"、"▼ 1.5"、"▲ 2.0"、全形 "－" "＋"
+  let isNegative = false;
+  if (str.startsWith('▼') || str.startsWith('-') || str.startsWith('－')) {
+    isNegative = true;
+    str = str.replace(/^[▼\-－]\s*/, '');
+  } else if (str.startsWith('▲') || str.startsWith('+') || str.startsWith('＋')) {
+    str = str.replace(/^[▲\+＋]\s*/, '');
+  }
+
+  str = str.replace(/\s+/g, '');
+  const num = parseFloat(str);
+  if (isNaN(num)) return null;
+  if (num === 0) return 0;
+  return isNegative ? -num : num;
 }
 
 export interface RawTwseStockDayAll {
