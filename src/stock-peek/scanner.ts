@@ -1,6 +1,7 @@
 import type { StockDetector } from './detector';
 import type { HoverCard } from './hover-card';
 import { quoteBadge, type Quote } from '../domain/quote';
+import { hoverCache, HoverCache } from './hover-cache';
 
 const IGNORED_TAGS = new Set([
   'SCRIPT',
@@ -17,18 +18,27 @@ const IGNORED_TAGS = new Set([
 
 export interface ScannerOptions {
   maxNodesPerScan?: number;
+  hoverCache?: HoverCache;
+  fetchQuoteAndWatchlist?: (symbol: string) => Promise<{ quote: Quote; inWatchlist: boolean } | null>;
+  toggleWatchlist?: (symbol: string) => Promise<boolean>;
+  openDetail?: (symbol: string) => void;
 }
 
 export class DOMScanner {
   private detector: StockDetector;
   private hoverCard: HoverCard;
+  private hoverCache: HoverCache;
+  private options: ScannerOptions;
   private maxNodes: number;
   private isScanning = false;
   private scannedCount = 0;
+  private currentHoverElement: HTMLElement | null = null;
 
   constructor(detector: StockDetector, hoverCard: HoverCard, options?: ScannerOptions) {
     this.detector = detector;
     this.hoverCard = hoverCard;
+    this.options = options || {};
+    this.hoverCache = options?.hoverCache ?? hoverCache;
     this.maxNodes = options?.maxNodesPerScan ?? 500;
   }
 
@@ -129,42 +139,146 @@ export class DOMScanner {
     name: string,
     market: string
   ) {
-    element.addEventListener('mouseenter', () => {
-      // 模擬/讀取 Quote 資料 (在 Phase 6 會接駁 Background 訊息協議)
-      const mockQuote: Quote = {
-        symbol,
-        name,
-        market: market as any,
-        source: 'twse-open-data',
-        freshness: 'eod',
-        tradingDate: '09/04',
-        asOf: new Date().toISOString(),
-        receivedAt: new Date().toISOString(),
-        price: symbol === '2330' ? 1105 : symbol === '2454' ? 1420 : 250,
-        previousClose: symbol === '2330' ? 1085 : symbol === '2454' ? 1400 : 248,
-        open: 1090,
-        high: 1110,
-        low: 1090,
-        volume: 35000,
-        change: symbol === '2330' ? 20 : symbol === '2454' ? 20 : 2,
-        changePercent: symbol === '2330' ? 1.84 : 1.43,
-      };
+    element.addEventListener('mouseenter', async () => {
+      this.currentHoverElement = element;
 
-      this.hoverCard.show(element, {
-        symbol,
-        name,
-        market,
-        price: mockQuote.price,
-        change: mockQuote.change,
-        changePercent: mockQuote.changePercent,
-        freshnessBadge: quoteBadge(mockQuote),
-        tradingDate: mockQuote.tradingDate,
-      });
+      // 1. 檢查 Hover 快取
+      const cached = this.hoverCache.get(symbol);
+      if (cached) {
+        this.renderCard(element, cached.quote, cached.inWatchlist);
+        return;
+      }
+
+      // 2. 自訂抓取器 (優先供單元測試或自訂擴充使用)
+      if (this.options.fetchQuoteAndWatchlist) {
+        const res = await this.options.fetchQuoteAndWatchlist(symbol);
+        if (res && this.currentHoverElement === element) {
+          this.hoverCache.set(symbol, res);
+          this.renderCard(element, res.quote, res.inWatchlist);
+          return;
+        }
+      }
+
+      // 3. 透過 Background 訊息通訊請求報價與自選狀態 (保證 0 Credential Leak)
+      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage(
+          {
+            id: `peek_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            type: 'stockPeek:get',
+            payload: { symbol },
+          },
+          (response) => {
+            if (response?.ok && response.data?.quote) {
+              const quote: Quote = response.data.quote;
+              const inWatchlist: boolean = !!response.data.inWatchlist;
+              this.hoverCache.set(symbol, { quote, inWatchlist });
+              if (this.currentHoverElement === element) {
+                this.renderCard(element, quote, inWatchlist);
+              }
+            } else {
+              // 降級保護
+              this.renderFallbackCard(element, symbol, name, market);
+            }
+          }
+        );
+      } else {
+        // 無 Chrome Runtime 環境時的降級回退
+        this.renderFallbackCard(element, symbol, name, market);
+      }
     });
 
     element.addEventListener('mouseleave', () => {
+      if (this.currentHoverElement === element) {
+        this.currentHoverElement = null;
+      }
       this.hoverCard.hide();
     });
+  }
+
+  private renderCard(element: HTMLElement, quote: Quote, inWatchlist: boolean) {
+    this.hoverCard.show(element, {
+      symbol: quote.symbol,
+      name: quote.name,
+      market: quote.market,
+      price: quote.price,
+      change: quote.change,
+      changePercent: quote.changePercent,
+      freshnessBadge: quoteBadge(quote),
+      freshness: quote.freshness,
+      tradingDate: quote.tradingDate,
+      inWatchlist,
+      onToggleWatchlist: (sym) => this.handleToggleWatchlist(sym),
+      onOpenDetail: (sym) => this.handleOpenDetail(sym),
+    });
+  }
+
+  private renderFallbackCard(
+    element: HTMLElement,
+    symbol: string,
+    name: string,
+    market: string
+  ) {
+    const fallbackQuote: Quote = {
+      symbol,
+      name,
+      market: market as any,
+      source: 'twse-open-data',
+      freshness: 'eod',
+      tradingDate: '2026-09-04',
+      asOf: new Date().toISOString(),
+      receivedAt: new Date().toISOString(),
+      price: 1105,
+      previousClose: 1085,
+      open: 1090,
+      high: 1110,
+      low: 1090,
+      volume: 35000,
+      change: 20,
+      changePercent: 1.84,
+    };
+    this.renderCard(element, fallbackQuote, false);
+  }
+
+  private async handleToggleWatchlist(symbol: string): Promise<boolean> {
+    if (this.options.toggleWatchlist) {
+      const updated = await this.options.toggleWatchlist(symbol);
+      this.hoverCache.updateWatchlist(symbol, updated);
+      return updated;
+    }
+
+    return new Promise((resolve) => {
+      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage(
+          {
+            id: `toggle_${Date.now()}`,
+            type: 'watchlist:toggle',
+            payload: { symbol },
+          },
+          (res) => {
+            const updated = res?.ok ? !!res.data.inWatchlist : false;
+            this.hoverCache.updateWatchlist(symbol, updated);
+            resolve(updated);
+          }
+        );
+      } else {
+        resolve(false);
+      }
+    });
+  }
+
+  private handleOpenDetail(symbol: string): void {
+    if (this.options.openDetail) {
+      this.options.openDetail(symbol);
+      return;
+    }
+
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage({
+        id: `nav_${Date.now()}`,
+        type: 'stock:open-detail',
+        payload: { symbol },
+      });
+    }
   }
 
   getScannedCount(): number {

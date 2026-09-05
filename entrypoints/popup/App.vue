@@ -15,8 +15,19 @@ const tabs: { id: TabType; label: string; icon: string }[] = [
   { id: 'settings', label: '設定', icon: '⚙️' },
 ];
 
-onMounted(() => {
+onMounted(async () => {
   appStore.checkConnection();
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      const res = await chrome.storage.local.get('active_nav_symbol');
+      if (res?.active_nav_symbol) {
+        appStore.viewStockDetail(res.active_nav_symbol);
+        await chrome.storage.local.remove('active_nav_symbol');
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }
 });
 </script>
 

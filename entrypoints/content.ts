@@ -3,7 +3,7 @@ import { domainPolicy } from '../src/stock-peek/domain-policy';
 import { StockDetector } from '../src/stock-peek/detector';
 import { DOMScanner } from '../src/stock-peek/scanner';
 import { HoverCard } from '../src/stock-peek/hover-card';
-import stockDictionary from '../tests/fixtures/stock-dictionary.json';
+import stockDictionary from '../src/data/stock-dictionary.json';
 
 export default defineContentScript({
   matches: [
@@ -22,7 +22,7 @@ export default defineContentScript({
       return;
     }
 
-    console.log(`🦁 StockLion: Stock Peek active on ${window.location.hostname} (Phase 1.5 Spike)`);
+    console.log(`🦁 StockLion: Stock Peek active on ${window.location.hostname} (Phase 6 Production)`);
 
     const detector = new StockDetector();
     detector.loadDictionary(stockDictionary as any);

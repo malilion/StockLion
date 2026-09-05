@@ -41,6 +41,9 @@ export type AppRequest =
   | ExtensionRequest<'quote:getMany', { symbols: string[]; preferRealtime: boolean }>
   | ExtensionRequest<'stock:search', { query: string; limit?: number }>
   | ExtensionRequest<'stockPeek:get', { symbol: string }>
+  | ExtensionRequest<'watchlist:check', { symbol: string }>
+  | ExtensionRequest<'watchlist:toggle', { symbol: string }>
+  | ExtensionRequest<'stock:open-detail', { symbol: string }>
   | ExtensionRequest<'credential:validate', { credentialId: string }>
   | ExtensionRequest<'provider:capabilities', Record<string, never>>
   | ExtensionRequest<'alert:evaluate', Record<string, never>>;

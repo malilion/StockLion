@@ -11,6 +11,7 @@ import { symbolService } from '../services/symbol-service';
 import { quoteService } from '../services/quote-service';
 import { providerRegistry } from '../providers/registry';
 import { openDataProvider } from '../providers/open-data/provider';
+import { watchlistRepository } from '../storage/watchlist-repository';
 
 // 預設註冊 OpenDataProvider
 providerRegistry.register(openDataProvider);
@@ -69,6 +70,29 @@ export class MessageRouter {
         new Set(allProviders.flatMap((p) => p.capabilities))
       );
       return { capabilities, providers: allProviders };
+    });
+
+    this.register('watchlist:check', async (payload: { symbol: string }) => {
+      const inWatchlist = await watchlistRepository.hasSymbol(payload.symbol);
+      return { inWatchlist, symbol: payload.symbol };
+    });
+
+    this.register('watchlist:toggle', async (payload: { symbol: string }) => {
+      const inWatchlist = await watchlistRepository.toggleSymbol(payload.symbol);
+      return { inWatchlist, symbol: payload.symbol };
+    });
+
+    this.register('stock:open-detail', async (payload: { symbol: string }) => {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.set({ active_nav_symbol: payload.symbol });
+      }
+      return { success: true, symbol: payload.symbol };
+    });
+
+    this.register('stockPeek:get', async (payload: { symbol: string }) => {
+      const quote = await quoteService.getBestQuote(payload.symbol);
+      const inWatchlist = await watchlistRepository.hasSymbol(payload.symbol);
+      return { quote, inWatchlist };
     });
   }
 
