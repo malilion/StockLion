@@ -12,10 +12,30 @@ const isValidating = ref(false);
 const feedbackMessage = ref('');
 const feedbackType = ref<'success' | 'error' | 'info'>('info');
 const validatedAt = ref<string | undefined>(undefined);
+const stockPeekEnabled = ref(true);
 
 onMounted(async () => {
   await loadCredential();
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      const res = await chrome.storage.local.get('stock_peek_enabled');
+      stockPeekEnabled.value = res.stock_peek_enabled !== false;
+    } catch {
+      // quiet catch
+    }
+  }
 });
+
+async function handleToggleStockPeek() {
+  stockPeekEnabled.value = !stockPeekEnabled.value;
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      await chrome.storage.local.set({ stock_peek_enabled: stockPeekEnabled.value });
+    } catch {
+      // quiet catch
+    }
+  }
+}
 
 async function loadCredential() {
   const cred = await credentialStore.get('fugle');
@@ -210,6 +230,26 @@ function getStatusLabel(s: CredentialStatus): string {
           @click="handleClear"
         >
           清除金鑰
+        </button>
+      </div>
+    </div>
+
+    <!-- Feature Toggle Card -->
+    <div class="card feature-card">
+      <div class="feature-row">
+        <div class="feature-info">
+          <div class="feature-title">網頁 Stock Peek 懸停資訊卡</div>
+          <div class="feature-desc">
+            在 PTT Stock 板、Yahoo 股市、鉅亨網、Threads 等財經與社群網頁瀏覽時，自動辨識股票並於懸停時呈現報價。
+          </div>
+        </div>
+        <button
+          type="button"
+          class="toggle-btn"
+          :class="{ active: stockPeekEnabled }"
+          @click="handleToggleStockPeek"
+        >
+          {{ stockPeekEnabled ? '已啟用' : '已停用' }}
         </button>
       </div>
     </div>
@@ -439,6 +479,54 @@ function getStatusLabel(s: CredentialStatus): string {
 
 .btn-danger:hover:not(:disabled) {
   background-color: rgba(239, 68, 68, 0.15);
+}
+
+.feature-card {
+  border-color: #334155;
+  background-color: #1e293b;
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feature-info {
+  flex: 1;
+}
+
+.feature-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 2px;
+}
+
+.feature-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.toggle-btn {
+  background-color: #334155;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background-color: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
 }
 
 .guide-card {

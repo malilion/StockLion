@@ -41,6 +41,14 @@ async function handleCreateGroup() {
     isAddGroupOpen.value = false;
   }
 }
+
+async function handleDeleteCurrentGroup() {
+  if (watchlistStore.activeGroupId === 'default') return;
+  const groupName = watchlistStore.activeGroup?.name || '此分組';
+  if (typeof window !== 'undefined' && window.confirm(`確定要刪除「${groupName}」分組嗎？`)) {
+    await watchlistStore.removeGroup(watchlistStore.activeGroupId);
+  }
+}
 </script>
 
 <template>
@@ -59,6 +67,14 @@ async function handleCreateGroup() {
           <span class="group-count">{{ group.symbols.length }}</span>
         </button>
       </div>
+      <button
+        v-if="watchlistStore.activeGroupId !== 'default'"
+        class="icon-btn delete-group-btn"
+        title="刪除目前分組"
+        @click="handleDeleteCurrentGroup"
+      >
+        🗑️
+      </button>
       <button
         class="icon-btn add-group-btn"
         title="新增分組"

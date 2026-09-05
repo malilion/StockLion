@@ -91,6 +91,9 @@ export class MessageRouter {
     this.register('stock:open-detail', async (payload: { symbol: string }) => {
       if (typeof chrome !== 'undefined' && chrome.storage?.local) {
         await chrome.storage.local.set({ active_nav_symbol: payload.symbol });
+        if (chrome.action?.openPopup) {
+          chrome.action.openPopup().catch(() => {});
+        }
       }
       return { success: true, symbol: payload.symbol };
     });
