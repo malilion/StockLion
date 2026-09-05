@@ -7,6 +7,13 @@ import {
 } from './protocol';
 import { createAppError, isAppError, type AppError } from '../domain/errors';
 import { storageRepository } from '../storage/repository';
+import { symbolService } from '../services/symbol-service';
+import { quoteService } from '../services/quote-service';
+import { providerRegistry } from '../providers/registry';
+import { openDataProvider } from '../providers/open-data/provider';
+
+// 預設註冊 OpenDataProvider
+providerRegistry.register(openDataProvider);
 
 export type MessageHandler<TPayload = any, TResult = any> = (
   payload: TPayload,
@@ -32,6 +39,36 @@ export class MessageRouter {
     this.register('schema:get-version', async () => {
       const version = await storageRepository.getSchemaVersion();
       return { version };
+    });
+
+    this.register('stock:search', (payload: { query: string; limit?: number }) => {
+      return symbolService.search(payload.query, payload.limit);
+    });
+
+    this.register(
+      'quote:get',
+      async (payload: { symbol: string; preferRealtime?: boolean }) => {
+        return await quoteService.getBestQuote(payload.symbol, {
+          preferRealtime: payload.preferRealtime,
+        });
+      }
+    );
+
+    this.register(
+      'quote:getMany',
+      async (payload: { symbols: string[]; preferRealtime?: boolean }) => {
+        return await quoteService.getBestQuotes(payload.symbols, {
+          preferRealtime: payload.preferRealtime,
+        });
+      }
+    );
+
+    this.register('provider:capabilities', () => {
+      const allProviders = providerRegistry.list();
+      const capabilities = Array.from(
+        new Set(allProviders.flatMap((p) => p.capabilities))
+      );
+      return { capabilities, providers: allProviders };
     });
   }
 
@@ -99,7 +136,6 @@ export class MessageRouter {
   attachListener() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        // Return true to indicate asynchronous sendResponse
         this.handleMessage(message, sender).then((response) => {
           sendResponse(response);
         });
