@@ -1,0 +1,4 @@
+[
+  { "symbol": "3017", "name": "奇鋐", "market": "TWSE", "price": 680, "change": 61, "changePercent": 9.85, "volume": 52140, "reason": "近六日累積週轉率逾 50%" },
+  { "symbol": "2382", "name": "廣達", "market": "TWSE", "price": 285, "change": 18.5, "changePercent": 6.94, "volume": 78200, "reason": "近六個營業日之累積週轉率達到標準" }
+]

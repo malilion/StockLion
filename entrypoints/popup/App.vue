@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { useAppStore, type TabType } from '../../src/stores/app';
 import WatchlistView from '../../src/views/WatchlistView.vue';
 import StockDetailView from '../../src/views/StockDetailView.vue';
+import RadarView from '../../src/views/RadarView.vue';
 
 const appStore = useAppStore();
 
@@ -106,12 +107,9 @@ onMounted(() => {
         <WatchlistView />
       </section>
 
-      <!-- Radar Tab Placeholder -->
+      <!-- Radar Tab -->
       <section v-else-if="appStore.currentTab === 'radar'" class="tab-content">
-        <div class="empty-state">
-          <div class="empty-icon">🔥</div>
-          <div class="empty-text">台股雷達（Phase 5 實作）</div>
-        </div>
+        <RadarView />
       </section>
 
       <!-- Search Tab Placeholder -->
