@@ -6,13 +6,18 @@ export interface HoverQuoteData {
   change: number | null;
   changePercent: number | null;
   freshnessBadge: string;
+  freshness?: 'realtime' | 'eod' | 'delayed' | 'stale';
   tradingDate?: string;
+  inWatchlist?: boolean;
+  onToggleWatchlist?: (symbol: string) => Promise<boolean>;
+  onOpenDetail?: (symbol: string) => void;
 }
 
 export class HoverCard {
   private container: HTMLDivElement | null = null;
   private hideTimeout: any = null;
   private currentTarget: HTMLElement | null = null;
+  private currentData: HoverQuoteData | null = null;
 
   constructor() {
     this.injectStyles();
@@ -81,6 +86,15 @@ export class HoverCard {
         background-color: #1e293b;
         color: #fbbf24;
       }
+      .sl-card-badge.realtime {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        font-weight: 600;
+      }
+      .sl-card-badge.eod {
+        background-color: #1e293b;
+        color: #94a3b8;
+      }
       .sl-card-price-row {
         display: flex;
         justify-content: space-between;
@@ -114,10 +128,20 @@ export class HoverCard {
         border-radius: 4px;
         cursor: pointer;
         text-align: center;
-        transition: background 0.2s;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
       }
       .sl-card-btn:hover {
         background: #334155;
+      }
+      .sl-card-btn.in-watchlist {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: #f59e0b;
+        color: #fbbf24;
+        font-weight: 600;
       }
     `;
     document.head.appendChild(style);
@@ -127,6 +151,7 @@ export class HoverCard {
     if (typeof document === 'undefined') return;
     this.clearHideTimeout();
     this.currentTarget = target;
+    this.currentData = data;
 
     if (!this.container) {
       this.container = document.createElement('div');
@@ -140,6 +165,10 @@ export class HoverCard {
     const isDown = (data.change ?? 0) < 0;
     const changeClass = isUp ? 'up' : isDown ? 'down' : '';
     const sign = isUp ? '+' : '';
+    const badgeClass = data.freshness === 'realtime' ? 'realtime' : 'eod';
+
+    const watchlistText = data.inWatchlist ? '★ 已在自選' : '⭐ 加入自選';
+    const watchlistBtnClass = data.inWatchlist ? 'sl-card-btn in-watchlist' : 'sl-card-btn';
 
     this.container.innerHTML = `
       <div class="sl-card-header">
@@ -147,7 +176,7 @@ export class HoverCard {
           <span class="sl-card-name">${data.name}</span>
           <span class="sl-card-symbol">${data.symbol}</span>
         </div>
-        <span class="sl-card-badge">${data.freshnessBadge}</span>
+        <span class="sl-card-badge ${badgeClass}">${data.freshnessBadge}</span>
       </div>
       <div class="sl-card-price-row">
         <span class="sl-card-price">${data.price != null ? `$${data.price}` : '--'}</span>
@@ -156,10 +185,39 @@ export class HoverCard {
         </span>
       </div>
       <div class="sl-card-footer">
-        <button class="sl-card-btn" id="sl-btn-watchlist">⭐ 加入自選</button>
+        <button class="${watchlistBtnClass}" id="sl-btn-watchlist">${watchlistText}</button>
         <button class="sl-card-btn" id="sl-btn-detail">→ 詳細資訊</button>
       </div>
     `;
+
+    // 綁定按鈕事件
+    const watchlistBtn = this.container.querySelector('#sl-btn-watchlist') as HTMLButtonElement | null;
+    if (watchlistBtn && data.onToggleWatchlist) {
+      watchlistBtn.onclick = async (e) => {
+        e.stopPropagation();
+        watchlistBtn.disabled = true;
+        try {
+          const nowInWatchlist = await data.onToggleWatchlist!(data.symbol);
+          data.inWatchlist = nowInWatchlist;
+          watchlistBtn.textContent = nowInWatchlist ? '★ 已在自選' : '⭐ 加入自選';
+          if (nowInWatchlist) {
+            watchlistBtn.className = 'sl-card-btn in-watchlist';
+          } else {
+            watchlistBtn.className = 'sl-card-btn';
+          }
+        } finally {
+          watchlistBtn.disabled = false;
+        }
+      };
+    }
+
+    const detailBtn = this.container.querySelector('#sl-btn-detail') as HTMLButtonElement | null;
+    if (detailBtn && data.onOpenDetail) {
+      detailBtn.onclick = (e) => {
+        e.stopPropagation();
+        data.onOpenDetail!(data.symbol);
+      };
+    }
 
     // 計算定位
     const rect = target.getBoundingClientRect();
@@ -190,6 +248,7 @@ export class HoverCard {
         this.container.classList.remove('visible');
       }
       this.currentTarget = null;
+      this.currentData = null;
     }, 150);
   }
 
@@ -206,6 +265,7 @@ export class HoverCard {
       this.container.parentNode.removeChild(this.container);
     }
     this.container = null;
+    this.currentData = null;
   }
 }
 

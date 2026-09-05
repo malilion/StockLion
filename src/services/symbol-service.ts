@@ -1,5 +1,5 @@
 import type { StockSymbol, Market, InstrumentType } from '../domain/stock';
-import stockDictionary from '../../tests/fixtures/stock-dictionary.json';
+import stockDictionary from '../data/stock-dictionary.json';
 
 export class SymbolService {
   private symbols: StockSymbol[] = [];

@@ -102,6 +102,31 @@ export class WatchlistRepository {
     await this.saveGroups(groups);
   }
 
+  async hasSymbol(symbol: string): Promise<boolean> {
+    const cleanSym = symbol.trim().toUpperCase();
+    const groups = await this.getGroups();
+    return groups.some((g) => g.symbols.includes(cleanSym));
+  }
+
+  async toggleSymbol(symbol: string, targetGroupId?: string): Promise<boolean> {
+    const cleanSym = symbol.trim().toUpperCase();
+    const groups = await this.getGroups();
+    const existingGroup = groups.find((g) => g.symbols.includes(cleanSym));
+
+    if (existingGroup) {
+      await this.removeSymbolFromGroup(existingGroup.id, cleanSym);
+      return false;
+    } else {
+      const destGroup = targetGroupId
+        ? groups.find((g) => g.id === targetGroupId) ?? groups[0]
+        : groups[0];
+      if (destGroup) {
+        await this.addSymbolToGroup(destGroup.id, cleanSym);
+      }
+      return true;
+    }
+  }
+
   async reorderSymbols(groupId: string, symbols: string[]): Promise<void> {
     const groups = await this.getGroups();
     const group = groups.find((g) => g.id === groupId);
