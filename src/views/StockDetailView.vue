@@ -50,7 +50,7 @@ async function loadStockDetail() {
 
   try {
     const [q, f] = await Promise.allSettled([
-      quoteService.getBestQuote(props.symbol, { preferRealtime: false }),
+      quoteService.getBestQuote(props.symbol, { preferRealtime: true }),
       quoteService.getFundamental(props.symbol),
     ]);
 

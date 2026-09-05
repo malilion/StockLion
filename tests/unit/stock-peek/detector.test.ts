@@ -67,4 +67,10 @@ describe('StockDetector & False-Positive Benchmarks', () => {
     const entities = detector.detect(text);
     expect(entities).toHaveLength(0);
   });
+
+  it('should detect 6-digit ETF symbols like 006208 in financial context', () => {
+    const text = '許多人每月定期定額存股 006208，長期獲利穩健。';
+    const entities = detector.detect(text);
+    expect(entities.some((e) => e.symbol === '006208')).toBe(true);
+  });
 });

@@ -2,6 +2,11 @@ import type { AlertEvaluationResult } from '../domain/alert';
 import { evaluateAlert } from '../domain/alert';
 import { alertRepository, AlertRepository } from '../storage/alert-repository';
 import { quoteService, QuoteService } from './quote-service';
+import { isTaiwanMarketHours } from '../domain/market-time';
+
+export interface AlertEngineOptions {
+  isBackgroundPoll?: boolean;
+}
 
 export class AlertEngine {
   private repo: AlertRepository;
@@ -12,7 +17,12 @@ export class AlertEngine {
     this.quotes = quotes;
   }
 
-  async evaluateAll(): Promise<AlertEvaluationResult[]> {
+  async evaluateAll(options?: AlertEngineOptions): Promise<AlertEvaluationResult[]> {
+    // 若為背景 Alarm 自動輪詢且非台股盤中交易時間，直接略過網路請求
+    if (options?.isBackgroundPoll && !isTaiwanMarketHours()) {
+      return [];
+    }
+
     const allRules = await this.repo.getAll();
     const activeRules = allRules.filter((r) => r.enabled);
     if (activeRules.length === 0) {
@@ -55,14 +65,16 @@ export class AlertEngine {
       }
     }
 
-    // 若有規則狀態變更（例如已穿越或回落重設），寫回儲存庫持久化
+    // 若有規則狀態變更（例如已穿越或回落重設），批次單次寫回儲存庫持久化
     if (stateChanged) {
+      const updatesMap = new Map<string, Partial<any>>();
       for (const rule of activeRules) {
-        await this.repo.updateRule(rule.id, {
+        updatesMap.set(rule.id, {
           triggeredCrossing: rule.triggeredCrossing,
           lastTriggeredAt: rule.lastTriggeredAt,
         });
       }
+      await this.repo.updateRulesBatch(updatesMap);
     }
 
     return results;

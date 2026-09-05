@@ -47,6 +47,7 @@ export type AppRequest =
   | ExtensionRequest<'credential:validate', { credentialId?: string; apiKey: string }>
   | ExtensionRequest<'credential:get', { providerId: string }>
   | ExtensionRequest<'credential:remove', { providerId: string }>
+  | ExtensionRequest<'credential:sync', Record<string, never> | undefined>
   | ExtensionRequest<'provider:capabilities', Record<string, never>>
   | ExtensionRequest<'alert:evaluate', Record<string, never>>
   | ExtensionRequest<'alert:list', { symbol?: string }>

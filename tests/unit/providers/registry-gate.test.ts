@@ -89,4 +89,22 @@ describe('Realtime Key Gate & Resolution Contract', () => {
     const badge = quoteBadge(realtimeQuote);
     expect(badge).toBe('● 即時');
   });
+
+  it('CRITICAL: syncWithStore should restore valid credentials from storage store', async () => {
+    const mockStore: any = {
+      getAll: async () => ({
+        fugle: {
+          id: 'cred_1',
+          providerId: 'fugle',
+          fields: { apiKey: 'mock_key' },
+          status: 'valid',
+        },
+      }),
+    };
+
+    expect(registry.isCredentialValid('fugle')).toBe(false);
+    await registry.syncWithStore(mockStore);
+    expect(registry.isCredentialValid('fugle')).toBe(true);
+    expect(registry.resolve('quote:realtime')).not.toBeNull();
+  });
 });

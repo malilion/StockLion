@@ -89,4 +89,37 @@ describe('Realtime Key Gate Enforcement on Alert Creation', () => {
     await alertRepo.removeRule(created.id);
     expect((await alertRepo.getAll()).length).toBe(0);
   });
+
+  it('should update multiple rules in batch cleanly', async () => {
+    providerRegistry.setCredentialValid('fugle', true);
+
+    const r1 = await alertRepo.addRule({
+      symbol: '2330',
+      type: 'price-above',
+      threshold: 1200,
+      requires: ['quote:realtime'],
+      enabled: true,
+    });
+    const r2 = await alertRepo.addRule({
+      symbol: '2317',
+      type: 'price-below',
+      threshold: 200,
+      requires: ['quote:realtime'],
+      enabled: true,
+    });
+
+    const batchUpdates = new Map();
+    batchUpdates.set(r1.id, { triggeredCrossing: true, lastTriggeredAt: '2026-09-05T12:00:00Z' });
+    batchUpdates.set(r2.id, { triggeredCrossing: false });
+
+    await alertRepo.updateRulesBatch(batchUpdates);
+
+    const updated = await alertRepo.getAll();
+    const updated1 = updated.find((r) => r.id === r1.id);
+    const updated2 = updated.find((r) => r.id === r2.id);
+
+    expect(updated1?.triggeredCrossing).toBe(true);
+    expect(updated1?.lastTriggeredAt).toBe('2026-09-05T12:00:00Z');
+    expect(updated2?.triggeredCrossing).toBe(false);
+  });
 });

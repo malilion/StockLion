@@ -136,7 +136,16 @@ export class FugleProvider implements QuoteProvider {
   }
 
   async getQuotes(symbols: string[], ctx?: ProviderContext): Promise<Quote[]> {
-    return Promise.all(symbols.map((sym) => this.getQuote(sym, ctx)));
+    const results: Quote[] = [];
+    const concurrency = 5;
+
+    for (let i = 0; i < symbols.length; i += concurrency) {
+      const chunk = symbols.slice(i, i + concurrency);
+      const chunkQuotes = await Promise.all(chunk.map((sym) => this.getQuote(sym, ctx)));
+      results.push(...chunkQuotes);
+    }
+
+    return results;
   }
 
   private normalizeQuote(symbol: string, raw: any): Quote {

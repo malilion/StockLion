@@ -42,7 +42,7 @@ export const useWatchlistStore = defineStore('watchlist', () => {
 
     try {
       const fetchedQuotes = await quoteService.getBestQuotes(symbols, {
-        preferRealtime: false,
+        preferRealtime: true,
       });
 
       for (const q of fetchedQuotes) {

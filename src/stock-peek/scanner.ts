@@ -34,6 +34,8 @@ export class DOMScanner {
   private scannedCount = 0;
   private currentHoverElement: HTMLElement | null = null;
 
+  private visitedTextNodes = new WeakSet<Node>();
+
   constructor(detector: StockDetector, hoverCard: HoverCard, options?: ScannerOptions) {
     this.detector = detector;
     this.hoverCard = hoverCard;
@@ -56,11 +58,16 @@ export class DOMScanner {
             const parent = node.parentElement;
             if (!parent) return NodeFilter.FILTER_REJECT;
 
+            // 記憶化：略過已檢查過之無實體節點，確保長網頁與瀑布流能穿透掃描 500 節點之後的內容
+            if (this.visitedTextNodes.has(node)) return NodeFilter.FILTER_REJECT;
+
             // 忽略不可見或表單/代碼元素
             if (IGNORED_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
             if (parent.isContentEditable) return NodeFilter.FILTER_REJECT;
             if (parent.classList.contains('stocklion-target')) return NodeFilter.FILTER_REJECT;
-            if (parent.closest('.stocklion-card-popover')) return NodeFilter.FILTER_REJECT;
+            if (parent.closest('.stocklion-card-popover') || parent.closest('.stocklion-card-host')) {
+              return NodeFilter.FILTER_REJECT;
+            }
 
             // 忽略空字串或純空白
             if (!node.textContent || node.textContent.trim().length === 0) {
@@ -88,7 +95,10 @@ export class DOMScanner {
         if (!text) continue;
 
         const entities = this.detector.detect(text);
-        if (entities.length === 0) continue;
+        if (entities.length === 0) {
+          this.visitedTextNodes.add(textNode);
+          continue;
+        }
 
         const fragment = document.createDocumentFragment();
         let lastIndex = 0;
@@ -96,9 +106,9 @@ export class DOMScanner {
         for (const entity of entities) {
           // 加入實體前方的文字
           if (entity.startIndex > lastIndex) {
-            fragment.appendChild(
-              document.createTextNode(text.slice(lastIndex, entity.startIndex))
-            );
+            const prefixNode = document.createTextNode(text.slice(lastIndex, entity.startIndex));
+            this.visitedTextNodes.add(prefixNode);
+            fragment.appendChild(prefixNode);
           }
 
           // 建立高亮 span
@@ -119,7 +129,9 @@ export class DOMScanner {
 
         // 加入尾部剩餘文字
         if (lastIndex < text.length) {
-          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+          const suffixNode = document.createTextNode(text.slice(lastIndex));
+          this.visitedTextNodes.add(suffixNode);
+          fragment.appendChild(suffixNode);
         }
 
         if (textNode.parentNode) {
@@ -218,25 +230,19 @@ export class DOMScanner {
     name: string,
     market: string
   ) {
-    const fallbackQuote: Quote = {
+    this.hoverCard.show(element, {
       symbol,
       name,
-      market: market as any,
-      source: 'twse-open-data',
-      freshness: 'eod',
-      tradingDate: '2026-09-04',
-      asOf: new Date().toISOString(),
-      receivedAt: new Date().toISOString(),
-      price: 1105,
-      previousClose: 1085,
-      open: 1090,
-      high: 1110,
-      low: 1090,
-      volume: 35000,
-      change: 20,
-      changePercent: 1.84,
-    };
-    this.renderCard(element, fallbackQuote, false);
+      market,
+      price: null,
+      change: null,
+      changePercent: null,
+      freshnessBadge: '○ 離線 / 待更新',
+      freshness: 'stale',
+      inWatchlist: false,
+      onToggleWatchlist: (sym) => this.handleToggleWatchlist(sym),
+      onOpenDetail: (sym) => this.handleOpenDetail(sym),
+    });
   }
 
   private async handleToggleWatchlist(symbol: string): Promise<boolean> {

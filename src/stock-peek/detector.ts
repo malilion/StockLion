@@ -38,12 +38,12 @@ export class StockDetector {
 
     const candidates: DetectedEntity[] = [];
 
-    // 1. 掃描數字代號 (4 ~ 5 位數字)
-    const symbolRegex = /\b(\d{4,5})\b/g;
+    // 1. 掃描數字/ETF代號 (4 ~ 6 位，例如 2330, 00878, 006208)
+    const symbolRegex = /\b(\d{4,6}[A-Za-z]?)\b/g;
     let match: RegExpExecArray | null;
 
     while ((match = symbolRegex.exec(text)) !== null) {
-      const symbol = match[1];
+      const symbol = match[1].toUpperCase();
       const stock = this.symbolMap.get(symbol);
       if (!stock) continue;
 
