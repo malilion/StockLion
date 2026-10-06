@@ -3,6 +3,10 @@ import { CredentialStore } from '../../../src/storage/credential-store';
 import { maskApiKey } from '../../../src/domain/credential';
 import { StorageRepository } from '../../../src/storage/repository';
 
+// Placeholder credentials for tests (not real keys).
+const VALID_FIXTURE = 'valid_key_12345';
+const INVALID_FIXTURE = 'bad_key_12345';
+
 describe('CredentialStore & Key Masking', () => {
   let mockStorage: Record<string, any>;
   let repo: StorageRepository;
@@ -32,7 +36,7 @@ describe('CredentialStore & Key Masking', () => {
   });
 
   it('should update status to valid and record validatedAt timestamp', async () => {
-    await store.save('fugle', { apiKey: 'valid_key_12345' });
+    await store.save('fugle', { apiKey: VALID_FIXTURE });
     const updated = await store.updateStatus('fugle', 'valid');
 
     expect(updated?.status).toBe('valid');
@@ -41,7 +45,7 @@ describe('CredentialStore & Key Masking', () => {
   });
 
   it('should preserve key when rate-limited (429) per SPEC requirements', async () => {
-    await store.save('fugle', { apiKey: 'valid_key_12345' });
+    await store.save('fugle', { apiKey: VALID_FIXTURE });
     const updated = await store.updateStatus('fugle', 'rate-limited', 'RATE_LIMITED');
 
     expect(updated?.status).toBe('rate-limited');
@@ -49,11 +53,11 @@ describe('CredentialStore & Key Masking', () => {
 
     // 關鍵要求：429 不得清空金鑰
     const check = await store.get('fugle');
-    expect(check?.fields.apiKey).toBe('valid_key_12345');
+    expect(check?.fields.apiKey).toBe(VALID_FIXTURE);
   });
 
   it('should preserve key when invalid (401) but mark status invalid per SPEC requirements', async () => {
-    await store.save('fugle', { apiKey: 'bad_key_12345' });
+    await store.save('fugle', { apiKey: INVALID_FIXTURE });
     const updated = await store.updateStatus('fugle', 'invalid', 'CREDENTIAL_INVALID');
 
     expect(updated?.status).toBe('invalid');
@@ -61,7 +65,7 @@ describe('CredentialStore & Key Masking', () => {
 
     // 401 標記為 invalid，但保留輸入以供使用者修正
     const check = await store.get('fugle');
-    expect(check?.fields.apiKey).toBe('bad_key_12345');
+    expect(check?.fields.apiKey).toBe(INVALID_FIXTURE);
   });
 
   it('should remove credential completely when user clicks remove', async () => {
