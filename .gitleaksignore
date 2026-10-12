@@ -1,0 +1,5 @@
+# Historical gitleaks findings that are test fixtures, not real secrets.
+# Fixtures were rewritten so new scans don't flag them; these lines cover old commits.
+ec2f4a59223c391af79ed66d0ff61ee9106500b0:tests/unit/credential/store.test.ts:generic-api-key:35
+ec2f4a59223c391af79ed66d0ff61ee9106500b0:tests/unit/credential/store.test.ts:generic-api-key:44
+ec2f4a59223c391af79ed66d0ff61ee9106500b0:tests/unit/credential/store.test.ts:generic-api-key:56
