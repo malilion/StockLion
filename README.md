@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  <img src="https://img.shields.io/badge/License-Apache--2.0-yellow.svg" alt="License: Apache-2.0" />
   <img src="https://img.shields.io/badge/Chrome-Manifest%20V3-blue.svg" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/Built%20with-WXT-green.svg" alt="WXT" />
   <img src="https://img.shields.io/badge/Vue-3.x-brightgreen.svg" alt="Vue 3" />
@@ -165,4 +165,4 @@ python3 scripts/generate_store_assets.py
 
 ## 📄 開源授權
 
-本專案採用 [MIT License](LICENSE) 授權條款開源發布。
+本專案採用 [Apache License 2.0](LICENSE) 授權條款開源發布。
