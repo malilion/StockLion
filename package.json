@@ -24,8 +24,13 @@
     "@types/node": "^22.10.1",
     "@wxt-dev/module-vue": "^1.0.3",
     "typescript": "^5.7.2",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "vue-tsc": "^2.1.10",
     "wxt": "^0.19.24"
+  },
+  "overrides": {
+    "vite": "^6.4.4",
+    "@vitest/mocker": "^4.1.12",
+    "source-map-js": "^1.2.2"
   }
 }
