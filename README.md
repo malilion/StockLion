@@ -166,3 +166,8 @@ python3 scripts/generate_store_assets.py
 ## 📄 開源授權
 
 本專案採用 [Apache License 2.0](LICENSE) 授權條款開源發布。
+
+---
+
+<!-- malilion-ecosystem-footer -->
+<p align="center"><sub>🦁 碼力獅 <a href="https://github.com/malilion">MaliLion</a> 生態系的一員 · <a href="https://malilion.com">malilion.com</a> · <a href="https://github.com/malilion?tab=repositories">更多作品</a></sub></p>
